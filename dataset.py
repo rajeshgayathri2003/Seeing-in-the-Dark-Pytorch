@@ -108,6 +108,8 @@ def readimage(gt_list, in_list, patchsize):
                 gt_patch = np.maximum(gt_patch, 0.0)
             
             gc.collect()  
+            gt_patch = np.squeeze(gt_patch)
+            input_patch = np.squeeze(input_patch)
             gt_list_images.append(gt_patch)
             in_list_images.append(input_patch)   
             raw.close()
@@ -123,7 +125,7 @@ class LowLightSonyDataset(Dataset):
     def __len__(self):
         return len(self.gt_list)
     
-    def __getimage__(self, idx):
+    def __getitem__(self, idx):
         img_gtt = self.gt_list[idx]
-        img_loww = self.train_list[idx]
+        img_loww = self.in_list[idx]
         return img_gtt, img_loww

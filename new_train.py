@@ -75,7 +75,7 @@ def train(lastepoch, savefrquency):
             count+=1
             low = data[1]
             gt = data[0]
-            
+            #print(low.shape, gt.shape)
             flag = 0
             if isinstance(low, type([])) or isinstance(gt, type([])):
                 pass
