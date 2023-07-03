@@ -81,7 +81,7 @@ def readimage(gt_list, in_list, patchsize):
                 input_patch = in_patch
             else:
                     
-                i#n_path = short_images[np.random.random_integers(0, len(short_images) - 1)]
+                #n_path = short_images[np.random.random_integers(0, len(short_images) - 1)]
                 raw = rawpy.imread(short_images)
                 #print("hi", in_path)
                 
