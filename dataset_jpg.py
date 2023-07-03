@@ -7,6 +7,8 @@ import rawpy
 from PIL import Image
 import gc
 
+def calcRatio(gt_img, in_img):
+    pass
 
 def transform(input_patch, gt_patch):
     if np.random.randint(2,size=1)[0] == 1:  # random flip 
