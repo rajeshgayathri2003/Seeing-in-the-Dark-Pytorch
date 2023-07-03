@@ -10,19 +10,21 @@ from PIL import Image
 
 PATH = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/models/checkpoint_sony_e4000.pth'
 
-input_dir = 'Seeing-in-the-Dark-Pytorch/Sony/short'
-gt_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/long'
+input_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/short/'
+gt_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/long/'
 result_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/test_result/'
 gt_fns = glob.glob(gt_dir + '1*.ARW')
 
 train_fns = []
-
+#print(len(gt_fns))
 for i in gt_fns:
     _, filename = os.path.split(i)
+    #print(input_dir+filename[0:5])
     train = glob.glob(input_dir+filename[0:5]+'*') #return a list
     train_len = len(train)
     if train_len == 0:
         train_fns.append([])
+        print('-_-')
     else:
         image = train[np.random.randint(0, train_len)]
         train_fns.append(image)
@@ -32,15 +34,17 @@ sonyTestset = dataset.LowLightSonyDataset(gt_fns, train_fns)
 print(len(sonyTestset))
 dataloader_test = DataLoader(sonyTestset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
 
-def run_test(model, dataloader_test, images, PATH):
+def run_test(model, dataloader_test,PATH):
     with torch.no_grad():
         model.eval()
         model.load_state_dict(torch.load(PATH))
         count = 0
         for image_num, low in enumerate(dataloader_test, 0):
-            low = low.to(next(model.parameters()).device)
             low = low[1]
             gt = low[0]
+            low =  low.permute(0,3,1,2).to(next(model.parameters()).device)
+            #gt_new = gt.permute(0,3,1,2).to(next(model.parameters()).device)
+            low = low.to(next(model.parameters()).device)
             outputs = model(low)
             output = outputs.permute(0, 2, 3, 1).cpu().data.numpy()
             output = np.minimum(np.maximum(output,0), 1)
@@ -52,4 +56,6 @@ def run_test(model, dataloader_test, images, PATH):
             
             
 
-model_ = modelSID()
+model_ = modelSID.SeeingInDark()
+run_test(model_, dataloader_test, PATH )
+print("DONE")

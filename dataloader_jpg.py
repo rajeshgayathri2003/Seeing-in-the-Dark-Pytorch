@@ -10,6 +10,8 @@ gt_dir = ""
 gt_fns=[]
 train_fns=[]
 
+dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/rec_outdoor2/dataset_may15_part0_rect/cam1/RGB/"
+
 for i in gt_fns:
     _, filename = os.path.split(i)
     train = glob.glob(input_dir+filename[0:5]+'*') #return a list
