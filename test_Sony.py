@@ -1,16 +1,18 @@
 import random
 import torch
-from torch.utils.data import Dataloader
+from torch.utils.data import DataLoader
 import modelSID
 import glob
 import os
 import numpy as np
 import dataset
+from PIL import Image
 
 PATH = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/models/checkpoint_sony_e4000.pth'
 
-input_dir = '/home/atreyee/Gayathri/pytorch-Learning-to-See-in-the-Dark/dataset/Sony/short/'
-gt_dir = '/home/atreyee/Gayathri/pytorch-Learning-to-See-in-the-Dark/dataset/Sony/long/'
+input_dir = 'Seeing-in-the-Dark-Pytorch/Sony/short'
+gt_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/long'
+result_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/test_result/'
 gt_fns = glob.glob(gt_dir + '1*.ARW')
 
 train_fns = []
@@ -27,14 +29,26 @@ for i in gt_fns:
 
 sonyTestset = dataset.LowLightSonyDataset(gt_fns, train_fns)
 #sonyDataset.transform(sonyDataset.gt_list, sonyDataset.train_list)
-dataloader_train = DataLoader(sonyTestset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
+print(len(sonyTestset))
+dataloader_test = DataLoader(sonyTestset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
 
 def run_test(model, dataloader_test, images, PATH):
     with torch.no_grad():
         model.eval()
         model.load_state_dict(torch.load(PATH))
-        for image_num, low in enumerate(dataloader_test):
+        count = 0
+        for image_num, low in enumerate(dataloader_test, 0):
             low = low.to(next(model.parameters()).device)
+            low = low[1]
+            gt = low[0]
+            outputs = model(low)
+            output = outputs.permute(0, 2, 3, 1).cpu().data.numpy()
+            output = np.minimum(np.maximum(output,0), 1)
+            #gt = gt.permute(0, 2, 3, 1).cpu()
+            #print(gt.shape, output.shape)
+            temp = (output[0,:,:,:])
+            Image.fromarray((temp*255).astype('uint8')).save(result_dir + f'{count:05}_00_train_.jpg')
+            count+=1
             
             
 

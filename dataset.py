@@ -113,7 +113,7 @@ def readimage(gt_list, in_list, patchsize):
             gt_list_images.append(gt_patch)
             in_list_images.append(input_patch)   
             raw.close()
-            
+    #print(len(gt_list_images), len(in_list_images)) 
     return gt_list_images, in_list_images
                   
 
