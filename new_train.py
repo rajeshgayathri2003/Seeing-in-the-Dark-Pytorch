@@ -10,8 +10,8 @@ from dataset import LowLightSonyDataset
 import dataloader
 from PIL import Image
 
-input_dir = '/home/atreyee/Gayathri/Learning_to_See_in_the_Dark_PyTorch/dataset/Sony/short/'
-gt_dir = '/home/atreyee/Gayathri/Learning_to_See_in_the_Dark_PyTorch/dataset/Sony/long/'
+input_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/short/'
+gt_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/long/'
 checkpoint_dir = './result_Sony/'
 result_dir = './result_Sony/'
 
@@ -84,6 +84,7 @@ def train(lastepoch, savefrquency):
                 gt_new = gt.permute(0,3,1,2).to(device)
                 optimizer.zero_grad()
                 outputs = _model(low)
+                print(outputs.shape, gt_new.shape)
                 loss = G_loss(outputs, gt_new)
                 loss.backward()
                 optimizer.step()

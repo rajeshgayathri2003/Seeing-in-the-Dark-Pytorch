@@ -6,8 +6,8 @@ from torch.utils.data import DataLoader
 
 
 
-input_dir = '/home/atreyee/Gayathri/pytorch-Learning-to-See-in-the-Dark/dataset/Sony/short/'
-gt_dir = '/home/atreyee/Gayathri/pytorch-Learning-to-See-in-the-Dark/dataset/Sony/long/'
+input_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/short/'
+gt_dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/Sony/long/'
 gt_fns = glob.glob(gt_dir + '0*.ARW')
 #print(train_fns)
 train_fns = []
