@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from patchify import patchify
 import os
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 import gc
 from PIL import Image
 import torch
@@ -10,43 +10,72 @@ import imageio.v2 as imageio
 
 dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/rec_outdoor2/dataset_may15_part0_rect/cam1/RGB/'
 
-def patchify_img(image, patch_size):
-    #print(type(image))
-    image_array = np.asarray(image)
-    size_x = (image_array.shape[0]//patch_size)*patch_size
-    size_y = (image_array.shape[1]//patch_size)*patch_size
+        
+class LowLightRGB(Dataset):
+    def __init__(self, gt_list, in_list,dir, patchify= False, patchsize=None):
+        self.gt_list = gt_list
+        self.in_list = in_list
+        self.dir = dir
+        self.patchsize = patchsize
+        self.gt_files = []
+        self.in_files = []
+        print("..........Loading Training Data..........")
+        if patchify:
+            self.read_image_patchify(gt_list)
+        else:
+            self.read_image(gt_list)
+        
+    def patchify_img(self, image, patch_size):
+        #print(type(image))
+        image_array = np.asarray(image)
+        size_x = (image_array.shape[0]//patch_size)*patch_size
+        size_y = (image_array.shape[1]//patch_size)*patch_size
+        
+        #crop original image to required size
+        image = image_array[:size_x, :size_y, :]
+        patch_img = patchify(image, (patch_size, patch_size, 3), step=patch_size)
+        
+        patches = []
+        
+        for j in range(patch_img.shape[0]):
+            for k in range(patch_img.shape[1]):
+                single_patch_image = patch_img[j,k]
+                
+                patches.append(np.squeeze(single_patch_image))       
+        return np.vstack([np.expand_dims(x, 0) for x in patches])
     
-    #crop original image to required size
-    image = image_array[:size_x, :size_y, :]
-    patch_img = patchify(image, (patch_size, patch_size, 3), step=patch_size)
-    
-    patches = []
-    
-    for j in range(patch_img.shape[0]):
-        for k in range(patch_img.shape[1]):
-            single_patch_image = patch_img[j,k]
+    def read_image_patchify(self, gt_list):
+        for i in range(len(gt_list)):
+            _, gt_file = os.path.split(gt_list[i])
+            gt_arr = Image.open(self.dir+gt_file)
+            gt_arr = self.patchify_img(gt_arr, 256)
+            #print(gt_arr[0,:,:,:])
+            #Image.fromarray(gt_arr[0,:,:,:]).save('./new/proper{}.jpg'.format(i))
+            gt_img = torch.from_numpy(gt_arr/255).permute(0, 3, 1, 2)
+            self.gt_files.append(gt_img)
+        print("DONE")
             
-            patches.append(np.squeeze(single_patch_image))       
-    return np.vstack([np.expand_dims(x, 0) for x in patches])
+    def read_image(self, gt_list):
+        for i in range(len(gt_list)):
+            image = gt_list[i]
+            img_arr = imageio.imread(self.dir+image)
+            
+            img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+            #Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
+            img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).unsqueeze(0)
+            self.gt_files.append(img)
+        print("DONE")
 
-def read_image_patchify(gt_list):
-    for i in range(len(gt_list)):
-        _, gt_file = os.path.split(gt_list[i])
-        gt_arr = Image.open(dir+gt_file)
-        gt_arr = patchify_img(gt_arr, 256)
-        print(gt_arr[0,:,:,:])
-        Image.fromarray(gt_arr[0,:,:,:]).save('./new/proper{}.jpg'.format(i))
-        gt_img = torch.from_numpy(gt_arr/255).permute(0, 3, 1, 2)
-        
-        
-def read_image(gt_list):
-    for i in range(len(gt_list)):
-        image = gt_list[i]
-        img_arr = imageio.imread(dir+image)
-        
-        img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
-        Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
+            
+    def __len__(self, img_list):
+        return len(img_list)
+    
+    def __getitem__(self, index):
+        gt_item = self.gt_list[index]
+        in_item = self.in_list[index]
+        return gt_item, in_item
        
+
 def Main(gt_fns, train_fns, train_fns_new, dir):
     file_list = os.listdir(dir)
     dict_img = {}
@@ -86,4 +115,5 @@ def Main(gt_fns, train_fns, train_fns_new, dir):
     return gt_fns, train_fns_new
 
 gt_fns, train_fns_new = Main([],[], [], dir)
-read_image(gt_fns)
+LowLightRGB(gt_fns, train_fns_new, dir)
+#read_image(gt_fns)
