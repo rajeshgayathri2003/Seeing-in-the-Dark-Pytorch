@@ -6,8 +6,7 @@ import rawpy
 import glob
 
 from modelSID import SeeingInDark_RGB
-from dataset import LowLightSonyDataset
-import dataloader_jpg
+import dataloader_jpg_new 
 from PIL import Image
 
 input_dir = '/home/atreyee/Gayathri/Learning_to_See_in_the_Dark_PyTorch/dataset/Sony/short/'
@@ -16,10 +15,6 @@ checkpoint_dir = './result_Sony/'
 result_dir = './result_Sony/'
 dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/rec_outdoor2/dataset_may15_part0_rect/cam1/RGB/"
 
-#get train IDs
-#train_fns = glob.glob(gt_dir + '0*.ARW')
-#train_ids = [int(os.path.basename(train_fn)[0:5]) for train_fn in train_fns]
-
 ps = 512 #patchsize
 save_freq = 500
 
@@ -27,38 +22,18 @@ save_freq = 500
 device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 print(f"Device: {device}")
 
-'''
-DEBUG = 0
-if DEBUG == 1:
-    save_freq = 2
-    train_ids = train_ids[0:5]
-'''    
-
 
 def G_loss(out_image, gt_image):
     return torch.mean(torch.abs(out_image-gt_image))
 
-'''
-gt_images = [None]*6000
-input_images = {}
-input_images['300'] = [None]*len(train_ids)
-input_images['250'] = [None]*len(train_ids)
-input_images['100'] = [None]*len(train_ids)
 
-#How can there be 5000, shouldn't it be 6000
-g_loss = np.zeros((5000,1))
-'''
+train_loader = dataloader_jpg_new.dataloader_train
+       
+for i, data in enumerate(train_loader, 0):
+    low = data[1]
+    gt = data[0]
+    print(low.shape, gt.shape)
 
-'''
-allfolders = glob.glob(result_dir+'*0')
-lastepoch = 0
-for folder in allfolders:
-    lastepoch = np.maximum(lastepoch, int(folder[-4:]))
-
-gt_files= train_fns
-'''
-train_loader = dataloader_jpg.dataloader_train
-    
 def train(lastepoch, savefrquency):
     result_dir = './result_jpg/'
     model_dir = './models/jpg/'
@@ -120,22 +95,6 @@ def train(lastepoch, savefrquency):
                 Image.fromarray((temp*255).astype('uint8')).save(epoch_result_dir + f'{count:05}_00_train_.jpg')
                 torch.save(_model.state_dict(), model_dir+'checkpoint_sony_e%04d.pth'%epoch)
                 
-                 
-        '''try:
-        0 1 2 3
-        0 3 1 2
-        0 1 2 3
-                print(inputs.shape, labels.shape)
-            except:
-                print("List")'''
-
-    '''for epoch in range(lastepoch, 4001):
-        if epoch>2000: 
-            learning_rate = 1e-5
-        for i, data in enumerate(trainloader, 0):
-            inputs, labels = data
-            
-    '''
    
 lastepoch = 0 
-train(lastepoch, 100)
+#train(lastepoch, 100)

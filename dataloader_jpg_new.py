@@ -10,9 +10,11 @@ import imageio.v2 as imageio
 
 dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/well_lit/png/cam1/hist/'
 
-        
+       
 class LowLightRGB(Dataset):
     def __init__(self, gt_list, in_list,dir, patchify= False, patchsize=None):
+        self.gt_list = gt_list
+        self.in_list = in_list
         self.dir = dir
         self.patchsize = patchsize
         self.gt_files = []
@@ -22,6 +24,8 @@ class LowLightRGB(Dataset):
             self.read_image_patchify(gt_list, in_list)
         else:
             self.read_image(gt_list, in_list)
+        self.gt_list = self.gt_files
+        self.in_list = self.in_files
             
         #print(len(gt_list), len(in_list))
         
@@ -99,8 +103,8 @@ class LowLightRGB(Dataset):
         print("DONE")
 
             
-    def __len__(self, img_list):
-        return len(img_list)
+    def __len__(self):
+        return len(self.gt_list)
     
     def __getitem__(self, index):
         gt_item = self.gt_list[index]
@@ -123,9 +127,9 @@ def Main():
         
     return file_list, in_list
 
-#print("HI")
+
 gt_fns, train_fns_new = Main()
-LowLightRGB(gt_fns, train_fns_new, dir)
-#print(gt_fns[100], train_fns_new[100])
-#read_image(gt_fns)
-#print("HELLO")
+
+outdoorDataset = LowLightRGB(gt_fns, train_fns_new, dir)
+dataloader_train = DataLoader(outdoorDataset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
+print("REACHED")
