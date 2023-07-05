@@ -24,7 +24,7 @@ ps = 512 #patchsize
 save_freq = 500
 
 #setting gpu
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:1' if torch.cuda.is_available() else 'cpu')
 print(f"Device: {device}")
 
 '''
@@ -69,6 +69,7 @@ def train(lastepoch, savefrquency):
     _model._initialise_weights()
     optimizer = optim.Adam(_model.parameters(), lr = learning_rate)
     for epoch in range(lastepoch, 4001):
+        torch.cuda.empty_cache()
         if (epoch%50 == 0):
             print("================EPOCH {}================".format(epoch))
         if epoch>2000:
@@ -79,6 +80,8 @@ def train(lastepoch, savefrquency):
             count+=1
             low = data[1]
             gt = data[0]
+            gt_test = gt.numpy()
+            Image.fromarray((gt_test[0,:,:,:]*255).astype('uint8')).save('./new/{}.jpg'.format(i))
             #print(low.shape, gt.shape)
             flag = 0
             if isinstance(low, type([])) or isinstance(gt, type([])):

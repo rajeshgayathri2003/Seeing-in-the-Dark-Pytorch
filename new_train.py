@@ -84,7 +84,7 @@ def train(lastepoch, savefrquency):
                 gt_new = gt.permute(0,3,1,2).to(device)
                 optimizer.zero_grad()
                 outputs = _model(low)
-                print(outputs.shape, gt_new.shape)
+                #print(outputs.shape, gt_new.shape)
                 loss = G_loss(outputs, gt_new)
                 loss.backward()
                 optimizer.step()

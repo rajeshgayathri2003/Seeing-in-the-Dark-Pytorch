@@ -3,7 +3,6 @@ import random
 import numpy as np
 import os
 from torch.utils.data import Dataset
-import rawpy
 from PIL import Image
 import gc
 
@@ -37,12 +36,14 @@ def readimage(gt_list, in_list, patchsize):
         _, gt_file = os.path.split(gt_list[i])
         _, in_file = os.path.split(in_list[i])
         gt_image = Image.open(dir+gt_list[i])
-        ##choose whether to keep this or not
-        ##gt_image = gt_image.resize(512, 512)
-        ##
         gt_image_array = np.asarray(gt_image, np.float32)
-        gt_image_array = np.expand_dims(gt_image_array/ 65535.0, axis = 0)
+        #print(gt_image_array.dtype)
+        gt_image_array = (np.float32(gt_image_array/ 65535.0))
         
+        #gt_image_array_new = (gt_image_array*255).astype(np.uint8)
+        #print(gt_image_array_new)
+        #Image.fromarray((gt_image_array[:,:,:]*255).astype(np.uint8)).save('./new/check_again2{}.jpg'.format(i))
+        gt_image_array = np.expand_dims(gt_image_array, axis = 0)
         _, h, w,_ = gt_image_array.shape
         
         short_images = in_list[i]
@@ -64,7 +65,6 @@ def readimage(gt_list, in_list, patchsize):
         #gt_patch = gt_image_array        
         img_patch = in_image_array[:,:patchsize, :patchsize, :]
         gt_patch = gt_image_array[:,:patchsize*2, :patchsize*2, :]
-        print("hi", gt_patch.shape)
         img_patch, gt_patch = transform(img_patch, gt_patch)
         
         input_patch = np.minimum(img_patch,1.0)
@@ -72,6 +72,7 @@ def readimage(gt_list, in_list, patchsize):
         
         gc.collect()  
         gt_patch = np.squeeze(gt_patch)
+        #Image.fromarray((gt_patch[:,:,:]*255).astype('uint8')).save('./new/{}.jpg'.format(i))
         input_patch = np.squeeze(input_patch)
         #print(gt_patch.shape, input_patch.shape)
         gt_list_images.append(gt_patch)
