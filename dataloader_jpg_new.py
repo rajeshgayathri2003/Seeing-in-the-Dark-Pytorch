@@ -8,23 +8,28 @@ from PIL import Image
 import torch
 import imageio.v2 as imageio
 
-dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/rec_outdoor2/dataset_may15_part0_rect/cam1/RGB/'
+dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/well_lit/png/cam1/hist/'
 
         
 class LowLightRGB(Dataset):
     def __init__(self, gt_list, in_list,dir, patchify= False, patchsize=None):
-        self.gt_list = gt_list
-        self.in_list = in_list
         self.dir = dir
         self.patchsize = patchsize
         self.gt_files = []
         self.in_files = []
         print("..........Loading Training Data..........")
         if patchify:
-            self.read_image_patchify(gt_list)
+            self.read_image_patchify(gt_list, in_list)
         else:
-            self.read_image(gt_list)
+            self.read_image(gt_list, in_list)
+            
+        #print(len(gt_list), len(in_list))
         
+    def find_ratio(self, in_image):
+        lst = in_image.split("/")
+        val = lst[7][2:]
+        return int(val)
+          
     def patchify_img(self, image, patch_size):
         #print(type(image))
         image_array = np.asarray(image)
@@ -44,26 +49,53 @@ class LowLightRGB(Dataset):
                 patches.append(np.squeeze(single_patch_image))       
         return np.vstack([np.expand_dims(x, 0) for x in patches])
     
-    def read_image_patchify(self, gt_list):
+    def read_image_patchify(self, gt_list, in_list):
+        count = 0
         for i in range(len(gt_list)):
+            count+=1
+            if (count%20 ==0):
+                print(count)
+                gc.collect()
+                
             _, gt_file = os.path.split(gt_list[i])
             gt_arr = Image.open(self.dir+gt_file)
             gt_arr = self.patchify_img(gt_arr, 256)
+            
+            shortexposure = in_list[i]
+            in_arr = Image.open(shortexposure)
+            ratio = self.find_ratio(shortexposure)
+            in_arr = self.patchify_img(in_arr, 256)
+            
             #print(gt_arr[0,:,:,:])
             #Image.fromarray(gt_arr[0,:,:,:]).save('./new/proper{}.jpg'.format(i))
             gt_img = torch.from_numpy(gt_arr/255).permute(0, 3, 1, 2)
+            in_img = torch.from_numpy((in_arr/255)*ratio).permute(0, 3, 1, 2)
             self.gt_files.append(gt_img)
+            self.in_files.append(in_img)
         print("DONE")
             
-    def read_image(self, gt_list):
+    def read_image(self, gt_list, in_list):
+        count = 0
         for i in range(len(gt_list)):
+            count+=1
+            if (count%20 ==0):
+                print(count)
+                
             image = gt_list[i]
-            img_arr = imageio.imread(self.dir+image)
+            in_image = in_list[i]
             
+            img_arr = imageio.imread(self.dir+image)
+            in_arr = imageio.imread(in_image)
+            
+            ratio = self.find_ratio(in_image)
+            in_arr = cv2.resize(in_arr, (512, 512), interpolation=cv2.INTER_LINEAR)
             img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+            
             #Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
             img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).unsqueeze(0)
+            in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).unsqueeze(0)
             self.gt_files.append(img)
+            self.in_files.append(in_img)
         print("DONE")
 
             
@@ -76,44 +108,24 @@ class LowLightRGB(Dataset):
         return gt_item, in_item
        
 
-def Main(gt_fns, train_fns, train_fns_new, dir):
-    file_list = os.listdir(dir)
-    dict_img = {}
-    for i in file_list:
-        vals = i.split('_')
-        if vals[0] not in dict_img:
-            dict_img[vals[0]] = [i]
-        else:
-            dict_img[vals[0]].append(i)
-            
-    for key in dict_img:
-        val = dict_img[key]
-        max_ = None
-        gt = None
-        for j in val:
-            exposure = j.split('_')[5]
-            if max_ == None:
-                max_ = float(exposure)
-                gt = j
-            else:
-                if float(exposure)> max_:
-                    max_ = float(exposure)
-                    gt = j
-                    
-        gt_fns.append(gt)
-        dict_img[key].remove(gt)
-        train_fns.append(dict_img[key])
-        
-    #print(gt_fns)
-    #print(train_fns)
+def Main():
+    gt_dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/well_lit/png/cam1/hist/"
+    exposure = [25, 50, 100, 200]
 
-    for i in train_fns:
-        train_len = len(i)
-        image = i[np.random.randint(0, train_len)]
-        train_fns_new.append(image)
+    file_list = os.listdir(gt_dir)
+    in_list = []
+    for i in range(len(file_list)):
+        _, filename = os.path.split(file_list[i])
+        img_exposure = np.random.randint(0, len(exposure))
+        in_dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/low_light/1_{}/png/cam1/adobe/".format(exposure[img_exposure])
+        in_file = in_dir+filename
+        in_list.append(in_file)
         
-    return gt_fns, train_fns_new
+    return file_list, in_list
 
-gt_fns, train_fns_new = Main([],[], [], dir)
+#print("HI")
+gt_fns, train_fns_new = Main()
 LowLightRGB(gt_fns, train_fns_new, dir)
+#print(gt_fns[100], train_fns_new[100])
 #read_image(gt_fns)
+#print("HELLO")

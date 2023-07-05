@@ -6,6 +6,64 @@ from torch.utils.data import Dataset
 from PIL import Image
 import gc
 
+#Well lit cam1 hist
+#low cam1 adobe
+
+gt_dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/well_lit/png/cam1/hist/"
+exposure = [25, 50, 100, 200]
+
+file_list = os.listdir(gt_dir)
+in_list = []
+for i in range(len(file_list)):
+    _, filename = os.path.split(file_list[i])
+    img_exposure = random.randint(0, len(exposure)-1)
+    in_dir = "/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/low_light/1_{}/png/cam1/adobe/".format(exposure[img_exposure])
+    in_file = in_dir+filename
+    in_list.append(in_file)
+    
+
+
+'''
+
+def Main(gt_fns, train_fns, train_fns_new, dir):
+    file_list = os.listdir(dir)
+    dict_img = {}
+    for i in file_list:
+        vals = i.split('_')
+        if vals[0] not in dict_img:
+            dict_img[vals[0]] = [i]
+        else:
+            dict_img[vals[0]].append(i)
+            
+    for key in dict_img:
+        val = dict_img[key]
+        max_ = None
+        gt = None
+        for j in val:
+            exposure = j.split('_')[5]
+            if max_ == None:
+                max_ = float(exposure)
+                gt = j
+            else:
+                if float(exposure)> max_:
+                    max_ = float(exposure)
+                    gt = j
+                    
+        gt_fns.append(gt)
+        dict_img[key].remove(gt)
+        train_fns.append(dict_img[key])
+        
+    #print(gt_fns)
+    #print(train_fns)
+
+    for i in train_fns:
+        train_len = len(i)
+        image = i[np.random.randint(0, train_len)]
+        train_fns_new.append(image)
+        
+    return gt_fns, train_fns_new
+    
+    
 def calcRatio(gt_img, in_img):
     pass
 
@@ -92,4 +150,4 @@ class LowLightSonyDataset(Dataset):
         img_gtt = self.gt_list[idx]
         img_loww = self.in_list[idx]
         return img_gtt, img_loww    
-        
+'''

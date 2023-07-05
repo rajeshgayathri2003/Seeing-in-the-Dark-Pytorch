@@ -57,12 +57,6 @@ def readimage(gt_list, in_list, patchsize):
             raw = rawpy.imread(gt_list[i])
             img_gt = raw.postprocess(use_camera_wb = True,half_size=False, no_auto_bright=True, output_bps=16).copy()
             img_gtt=np.expand_dims(np.float32(img_gt/65535.0), axis=0)
-            #gt_image_array_new = (img_gtt*255).astype(np.uint8)
-            #print(gt_image_array_new)
-            #Image.fromarray((img_gtt[0,:,:,:]*255).astype(np.uint8)).save('./new/check_again3{}.jpg'.format(i))
-            #new_image = Image.fromarray(img_gtt.astype(np.uint8)).resize(512, 512)
-            #img_gtt = np.array(new_image, np.float32)
-            #print(img_gtt.shape)
             _, h,w,_ = img_gtt.shape
             
             correct_dim_flag = False
@@ -86,8 +80,6 @@ def readimage(gt_list, in_list, patchsize):
                     
                 #n_path = short_images[np.random.random_integers(0, len(short_images) - 1)]
                 raw = rawpy.imread(short_images)
-                #print("hi", in_path)
-                
                 #raw = raw.postprocess(use_camera_wb=True, half_size=False, no_auto_bright=True, output_bps=16)
                 img = raw.raw_image_visible.astype(np.float32).copy()
                 img_loww = (np.maximum(img - 512,0)/ (16383 - 512))
