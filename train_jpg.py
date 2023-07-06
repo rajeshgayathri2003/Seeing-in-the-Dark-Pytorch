@@ -28,11 +28,13 @@ def G_loss(out_image, gt_image):
 
 
 train_loader = dataloader_jpg_new.dataloader_train
-       
+  
+'''       
 for i, data in enumerate(train_loader, 0):
     low = data[1]
     gt = data[0]
     print(low.shape, gt.shape)
+'''
 
 def train(lastepoch, savefrquency):
     result_dir = './result_jpg/'
@@ -55,15 +57,16 @@ def train(lastepoch, savefrquency):
             count+=1
             low = data[1]
             gt = data[0]
-            gt_test = gt.numpy()
-            Image.fromarray((gt_test[0,:,:,:]*255).astype('uint8')).save('./new/{}.jpg'.format(i))
+            #print(low.shape, gt.shape)
+            #gt_test = gt.numpy()
+            #Image.fromarray((gt_test[0,:,:,:]*255).astype('uint8')).save('./new/{}.jpg'.format(i))
             #print(low.shape, gt.shape)
             flag = 0
             if isinstance(low, type([])) or isinstance(gt, type([])):
                 pass
             else: 
-                low =  low.permute(0,3,1,2).to(device)
-                gt_new = gt.permute(0,3,1,2).to(device)
+                low =  low.to(device)
+                gt_new = gt.to(device)
                 optimizer.zero_grad()
                 outputs = _model(low)
                 #print(outputs.shape, gt_new.shape)
@@ -89,7 +92,8 @@ def train(lastepoch, savefrquency):
                     
                 output = outputs.permute(0, 2, 3, 1).cpu().data.numpy()
                 output = np.minimum(np.maximum(output,0), 1)
-                #gt = gt.permute(0, 2, 3, 1).cpu()
+                gt = gt.permute(0, 2, 3, 1).cpu()
+                #print(gt.shape, output.shape)
                 #print(gt.shape, output.shape)
                 temp = np.concatenate((gt[0,:,:,:], output[0,:,:,:]),axis=1)
                 Image.fromarray((temp*255).astype('uint8')).save(epoch_result_dir + f'{count:05}_00_train_.jpg')
@@ -97,4 +101,4 @@ def train(lastepoch, savefrquency):
                 
    
 lastepoch = 0 
-#train(lastepoch, 100)
+train(lastepoch, 100)

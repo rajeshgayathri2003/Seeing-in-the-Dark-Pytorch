@@ -96,8 +96,8 @@ class LowLightRGB(Dataset):
             img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
             
             #Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
-            img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).unsqueeze(0)
-            in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).unsqueeze(0)
+            img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).float()
+            in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).float()
             self.gt_files.append(img)
             self.in_files.append(in_img)
         print("DONE")
