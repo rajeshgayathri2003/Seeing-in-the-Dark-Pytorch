@@ -27,7 +27,7 @@ def G_loss(out_image, gt_image):
     return torch.mean(torch.abs(out_image-gt_image))
 
 
-train_loader = dataloader_jpg_new.dataloader_train
+train_loader = dataloader_jpg_new.train()
   
 '''       
 for i, data in enumerate(train_loader, 0):

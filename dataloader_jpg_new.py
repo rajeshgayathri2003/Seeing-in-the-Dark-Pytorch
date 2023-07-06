@@ -12,7 +12,7 @@ dir = '/home/atreyee/Gayathri/Seeing-in-the-Dark-Pytorch/dataset/well_lit/png/ca
 
        
 class LowLightRGB(Dataset):
-    def __init__(self, gt_list, in_list,dir, patchify= False, patchsize=None):
+    def __init__(self, gt_list, in_list,dir=None, patchify= False, patchsize=None):
         self.gt_list = gt_list
         self.in_list = in_list
         self.dir = dir
@@ -54,61 +54,95 @@ class LowLightRGB(Dataset):
         return np.vstack([np.expand_dims(x, 0) for x in patches])
     
     def read_image_patchify(self, gt_list, in_list):
-        count = 0
-        for i in range(len(gt_list)):
-            count+=1
-            if (count%20 ==0):
-                print(count)
-                gc.collect()
+        if gt_list == None:
+            count = 0
+            for i in range(len(in_list)):
+                shortexposure = in_list[i]
+                in_arr = Image.open(shortexposure)
+                #ratio = self.find_ratio(shortexposure)
+                ratio = 200
+                in_arr = self.patchify_img(in_arr, 256)
+                in_img = torch.from_numpy((in_arr/255)*ratio).permute(0, 3, 1, 2)
+                self.in_files.append(in_img)
+                self.gt_files.append([])
                 
-            _, gt_file = os.path.split(gt_list[i])
-            gt_arr = Image.open(self.dir+gt_file)
-            gt_arr = self.patchify_img(gt_arr, 256)
-            
-            shortexposure = in_list[i]
-            in_arr = Image.open(shortexposure)
-            ratio = self.find_ratio(shortexposure)
-            in_arr = self.patchify_img(in_arr, 256)
-            
-            #print(gt_arr[0,:,:,:])
-            #Image.fromarray(gt_arr[0,:,:,:]).save('./new/proper{}.jpg'.format(i))
-            gt_img = torch.from_numpy(gt_arr/255).permute(0, 3, 1, 2)
-            in_img = torch.from_numpy((in_arr/255)*ratio).permute(0, 3, 1, 2)
-            self.gt_files.append(gt_img)
-            self.in_files.append(in_img)
-        print("DONE")
-            
+        else:
+            count = 0
+            for i in range(len(gt_list)):
+                count+=1
+                if (count%20 ==0):
+                    print(count)
+                    gc.collect()
+                    
+                _, gt_file = os.path.split(gt_list[i])
+                gt_arr = Image.open(self.dir+gt_file)
+                gt_arr = self.patchify_img(gt_arr, 256)
+                
+                shortexposure = in_list[i]
+                in_arr = Image.open(shortexposure)
+                ratio = self.find_ratio(shortexposure)
+                in_arr = self.patchify_img(in_arr, 256)
+                
+                #print(gt_arr[0,:,:,:])
+                #Image.fromarray(gt_arr[0,:,:,:]).save('./new/proper{}.jpg'.format(i))
+                gt_img = torch.from_numpy(gt_arr/255).permute(0, 3, 1, 2)
+                in_img = torch.from_numpy((in_arr/255)*ratio).permute(0, 3, 1, 2)
+                self.gt_files.append(gt_img)
+                self.in_files.append(in_img)
+            print("DONE")
+                
     def read_image(self, gt_list, in_list):
-        count = 0
-        for i in range(len(gt_list)):
-            count+=1
-            if (count%20 ==0):
-                print(count)
+        if gt_list ==  None:
+            count = 0
+            for i in range(len(in_list)):
+                count+=1
+                if (count%20 ==0):
+                    print(count)
+                in_image = in_list[i]
+                in_arr = cv2.imread(in_image)
+                in_arr = cv2.cvtColor(in_arr, cv2.COLOR_BGR2RGB)
+                #print(in_arr.shape)
+                #ratio = self.find_ratio(in_image)
+                #ratio = 25
+                ratio = 1
+                in_arr = cv2.resize(in_arr, (512, 512), interpolation=cv2.INTER_LINEAR)
+                in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).float()
+                self.in_files.append(in_img)
+                self.gt_files.append([])
+        else:
+            count = 0
+            for i in range(len(gt_list)):
+                count+=1
+                if (count%20 ==0):
+                    print(count)
+                    
+                image = gt_list[i]
+                in_image = in_list[i]
                 
-            image = gt_list[i]
-            in_image = in_list[i]
-            
-            img_arr = imageio.imread(self.dir+image)
-            in_arr = imageio.imread(in_image)
-            
-            ratio = self.find_ratio(in_image)
-            in_arr = cv2.resize(in_arr, (512, 512), interpolation=cv2.INTER_LINEAR)
-            img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
-            
-            #Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
-            img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).float()
-            in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).float()
-            self.gt_files.append(img)
-            self.in_files.append(in_img)
-        print("DONE")
+                img_arr = imageio.imread(self.dir+image)
+                in_arr = imageio.imread(in_image)
+                
+                ratio = self.find_ratio(in_image)
+                in_arr = cv2.resize(in_arr, (512, 512), interpolation=cv2.INTER_LINEAR)
+                img_arr = cv2.resize(img_arr, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+                
+                #Image.fromarray(img_arr).save('./new/method2{}.jpg'.format(i))
+                img = torch.from_numpy(np.array(img_arr)/255).permute(2, 0, 1).float()
+                in_img = torch.from_numpy((np.array(in_arr)/255)*ratio).permute(2, 0, 1).float()
+                self.gt_files.append(img)
+                self.in_files.append(in_img)
+            print("DONE")
 
             
     def __len__(self):
         return len(self.gt_list)
     
     def __getitem__(self, index):
-        gt_item = self.gt_list[index]
         in_item = self.in_list[index]
+        try:
+            gt_item = self.gt_list[index]
+        except Exception as e:
+            gt_item = np.zeros_like(in_item)
         return gt_item, in_item
        
 
@@ -127,9 +161,10 @@ def Main():
         
     return file_list, in_list
 
+def train():
+    gt_fns, train_fns_new = Main()
 
-gt_fns, train_fns_new = Main()
-
-outdoorDataset = LowLightRGB(gt_fns, train_fns_new, dir)
-dataloader_train = DataLoader(outdoorDataset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
-print("REACHED")
+    outdoorDataset = LowLightRGB(gt_fns, train_fns_new, dir)
+    dataloader_train = DataLoader(outdoorDataset, batch_size=1, shuffle=True, num_workers=0, pin_memory=True) 
+    print("REACHED")
+    return dataloader_train
