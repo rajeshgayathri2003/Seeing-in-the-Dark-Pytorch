@@ -1,0 +1,11 @@
+optimizer: Adam
+lr: 1e-4
+best_val: 20.403209686279297
+resume: None
+loss: l1
+epoch: 301
+milestones:
+- 10
+- 20
+gamma: 0.1
+new_val: 0
